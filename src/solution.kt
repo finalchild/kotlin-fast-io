@@ -2,10 +2,10 @@ import java.io.FilterOutputStream
 import java.io.OutputStream
 
 val fastOutStream = run {
+    val outField = FilterOutputStream::class.java.getDeclaredField("out")
+    outField.isAccessible = true
     var stream = System.out as OutputStream
     while (stream is FilterOutputStream) {
-        val outField = FilterOutputStream::class.java.getDeclaredField("out")
-        outField.isAccessible = true
         stream = outField.get(stream) as OutputStream
     }
     stream
