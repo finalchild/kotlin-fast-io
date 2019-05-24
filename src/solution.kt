@@ -82,7 +82,7 @@ fun fastInRead(): Byte {
 }
 
 fun scanInt(): Int {
-     var c: Byte
+    var c: Byte
     do {
         c = fastInRead()
     } while (c == ' '.toByte() || c == '\n'.toByte());
