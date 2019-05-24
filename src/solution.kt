@@ -13,7 +13,7 @@ val fastOutStream = run {
 val fastOutBuf = ByteArray(8192)
 var fastOutBufCount = 0
 
-fun print(s: ByteArray) {
+fun fastOutWrite(s: ByteArray) {
     if (s.size >= fastOutBuf.size) {
         flush()
         fastOutStream.write(s, 0, s.size)
@@ -38,7 +38,7 @@ fun print(o: Any?) {
 }
 
 fun print(s: String) {
-    print(s.toByteArray())
+    fastOutWrite(s.toByteArray())
 }
 
 fun println(o: Any?) {
