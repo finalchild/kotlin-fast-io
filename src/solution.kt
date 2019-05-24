@@ -1,19 +1,7 @@
-import java.io.FilterOutputStream
-import java.io.OutputStream
-import java.io.FilterInputStream
-import java.io.InputStream
-import kotlin.experimental.and
+import java.io.*
 
-val fastOutStream = run {
-    val outField = FilterOutputStream::class.java.getDeclaredField("out")!!
-    outField.isAccessible = true
-    var stream = System.out as OutputStream
-    while (stream is FilterOutputStream) {
-        stream = outField.get(stream) as OutputStream
-    }
-    stream
-}
-val fastOutBuf = ByteArray(8192)
+val fastOutStream = FileOutputStream(FileDescriptor.out)
+val fastOutBuf = ByteArray(4096)
 var fastOutBufCount = 0
 
 fun fastOutWrite(s: ByteArray) {
@@ -39,26 +27,16 @@ fun flush() {
 fun print(o: Any?) {
     print(o.toString())
 }
-
 fun print(s: String) {
     fastOutWrite(s.toByteArray())
 }
-
 fun println(o: Any?) {
     print(o.toString())
     print("\n")
 }
 
-val fastInStream = run {
-    val inField = FilterInputStream::class.java.getDeclaredField("in")!!
-    inField.isAccessible = true
-    var stream = System.`in` as InputStream
-    while (stream is FilterInputStream) {
-        stream = inField.get(stream) as InputStream
-    }
-    stream
-}
-val fastInBuf = ByteArray(8192)
+val fastInStream = FileInputStream(FileDescriptor.`in`)
+val fastInBuf = ByteArray(4096)
 var fastInBufPos = 0
 var fastInBufCount = 0
 
@@ -76,23 +54,63 @@ fun fastInRead(): Byte {
         if (fastInBufPos >= fastInBufCount)
             return -1
     }
-    val result = (fastInBuf[fastInBufPos] and 0xff.toByte())
+    val result = fastInBuf[fastInBufPos]
     fastInBufPos++
     return result
 }
 
+var fastInScanStringBuf: ByteArray? = null
+@Suppress("deprecation")
+fun scanString(): String {
+    if (fastInScanStringBuf == null) fastInScanStringBuf = ByteArray(256)
+    var c: Byte
+    do {
+        c = fastInRead()
+    } while (c == ' '.toByte() || c == '\n'.toByte())
+
+    var count = 0
+    while (c != (-1).toByte() && c != ' '.toByte() && c != '\n'.toByte()) {
+        if (count == fastInScanStringBuf!!.size) {
+            val oldBuf = fastInScanStringBuf!!
+            fastInScanStringBuf = ByteArray(oldBuf.size * 2)
+            System.arraycopy(oldBuf, 0, fastInScanStringBuf, 0, count)
+        }
+        fastInScanStringBuf!![count] = c
+        count++
+        c = fastInRead()
+    }
+    return java.lang.String(fastInScanStringBuf, 0, 0, count) as String
+}
 fun scanInt(): Int {
     var c: Byte
     do {
         c = fastInRead()
-    } while (c == ' '.toByte() || c == '\n'.toByte());
+    } while (c == ' '.toByte() || c == '\n'.toByte())
 
-    var result = c - '0'.toByte()
-    while (true) {
-        c = fastInRead()
-        if (c == (-1).toByte() || c == ' '.toByte() || c == '\n'.toByte()) {
-            return result
-        }
+    val negative = c == '-'.toByte()
+    if (negative) c = fastInRead()
+
+    var result = 0
+    while (c != (-1).toByte() && c != ' '.toByte() && c != '\n'.toByte()) {
         result = result * 10 + c - '0'.toByte()
+        c = fastInRead()
+    }
+    return if (negative) -result else result
+}
+fun scanLong(): Long {
+    var c: Byte
+    do {
+        c = fastInRead()
+    } while (c == ' '.toByte() || c == '\n'.toByte())
+
+    val negative = c == '-'.toByte()
+    if (negative) c = fastInRead()
+
+    var result = 0.toLong()
+    while (c != (-1).toByte() && c != ' '.toByte() && c != '\n'.toByte()) {
+        result = result * 10 + c - '0'.toByte()
+        c = fastInRead()
+    }
+    return if (negative) -result else result
     }
 }
