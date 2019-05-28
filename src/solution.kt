@@ -117,3 +117,28 @@ fun scanLong(): Long {
     }
     return if (negative) -result else result
 }
+fun scanDouble(): Double {
+    var c: Byte
+    do {
+        c = fastInRead()
+    } while (c == ' '.toByte() || c == '\n'.toByte())
+
+    val negative = c == '-'.toByte()
+    if (negative) c = fastInRead()
+
+    var result = 0.0
+    while (c != (-1).toByte() && c != ' '.toByte() && c != '\n'.toByte() && c != '.'.toByte()) {
+        result = result * 10 + c - '0'.toByte()
+        c = fastInRead()
+    }
+    if (c == '.'.toByte()) {
+        c = fastInRead()
+        var unit = 1.0
+        while (c != (-1).toByte() && c != ' '.toByte() && c != '\n'.toByte()) {
+            unit /= 10
+            result += (c - '0'.toByte()) * unit
+            c = fastInRead()
+        }
+    }
+    return if (negative) -result else result
+}
