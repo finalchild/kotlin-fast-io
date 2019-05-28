@@ -1,7 +1,11 @@
 import java.io.*
+import kotlin.concurrent.thread
 
 val fastOutStream = FileOutputStream(FileDescriptor.out)
-val fastOutBuf = ByteArray(4096)
+val fastOutBuf = run {
+    Runtime.getRuntime().addShutdownHook(thread(start = false, name = "fast-io flush() shutdown hook", block = ::flush))
+    ByteArray(4096)
+}
 var fastOutBufCount = 0
 
 fun fastOutWrite(s: ByteArray) {
@@ -112,5 +116,4 @@ fun scanLong(): Long {
         c = fastInRead()
     }
     return if (negative) -result else result
-    }
 }
